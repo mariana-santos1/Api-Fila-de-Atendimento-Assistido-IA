@@ -47,6 +47,9 @@ public class GlobalExceptionHandler {
                 exception.getStatus(), exception.getDetail());
         problem.setTitle(exception.getStatus().getReasonPhrase());
         problem.setProperty("code", exception.getCode());
+        if (exception.getFields() != null) {
+            problem.setProperty("fields", exception.getFields());
+        }
 
         return ResponseEntity.status(exception.getStatus()).body(problem);
     }

@@ -21,6 +21,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     long countByCycleIdAndStatusIn(Long cycleId, Collection<TicketStatus> statuses);
 
+    long countByCycleIdAndStatus(Long cycleId, TicketStatus status);
+
+    Optional<Ticket> findFirstByCycleIdAndStatus(Long cycleId, TicketStatus status);
+
+    boolean existsByQueueIdAndStatusIn(Long queueId, Collection<TicketStatus> statuses);
+
     List<Ticket> findByCycleIdOrderByCreatedAtAsc(Long cycleId);
 
     default Optional<Ticket> findNextCandidate(Long cycleId) {

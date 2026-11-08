@@ -361,16 +361,17 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Criação persiste a fila e o ciclo 1 ACTIVE na mesma transação.
-- [ ] Pesos inválidos retornam 400 com fields; nome/prefixo duplicado retorna 409.
-- [ ] Atualização de pesos não altera `cycleWeight` de tickets já no ciclo.
-- [ ] Desativação com WAITING/CALLED retorna 409; sem tickets ativos desativa e fecha o ciclo.
-- [ ] `QueueIT` cobre os cinco critérios de fila.
-- [ ] Test count: todos os testes de `QueueIT` passam; nenhum teste removido.
+- [x] Criação persiste a fila e o ciclo 1 ACTIVE na mesma transação.
+- [x] Pesos inválidos retornam 400 com fields; nome/prefixo duplicado retorna 409.
+- [x] Atualização de pesos não altera `cycleWeight` de tickets já no ciclo.
+- [x] Desativação com WAITING/CALLED retorna 409; sem tickets ativos desativa e fecha o ciclo.
+- [x] `QueueIT` cobre os cinco critérios de fila.
+- [x] Test count: todos os testes de `QueueIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(queue): add queue management`
+**Completed**: 2026-11-08 - 91181af
 
 ---
 
