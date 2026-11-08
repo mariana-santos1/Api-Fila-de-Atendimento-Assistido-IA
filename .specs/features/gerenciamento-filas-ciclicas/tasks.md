@@ -218,10 +218,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Enums `Role`, `Priority`, `TicketStatus`, `CycleStatus` existem com os valores do design.
-- [ ] Entidades usam `@Version` onde indicado, `Instant` e nomes de coluna do schema.
-- [ ] Mapeamentos compilam e o contexto valida contra o Flyway com `ddl-auto=validate`.
-- [ ] Nenhuma lógica de negócio fica nas entidades.
+- [x] Enums `Role`, `Priority`, `TicketStatus`, `CycleStatus` existem com os valores do design.
+- [x] Entidades usam `@Version` onde indicado, `Instant` e nomes de coluna do schema.
+- [x] Mapeamentos compilam e o contexto valida contra o Flyway com `ddl-auto=validate`.
+- [x] Nenhuma lógica de negócio fica nas entidades.
 
 **Tests**: none
 **Gate**: build
