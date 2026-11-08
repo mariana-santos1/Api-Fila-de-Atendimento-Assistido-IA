@@ -149,15 +149,16 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Datasource aponta para as variáveis do Compose (`DB_URL`, `DB_USER`, `DB_PASSWORD`).
-- [ ] Flyway habilitado; JPA com `ddl-auto=validate` e timezone UTC.
-- [ ] Actuator expõe `health` e `info`.
-- [ ] `JWT_SECRET`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` são obrigatórios e validados no startup.
-- [ ] Aplicação compila e o contexto carrega com o banco disponível.
+- [x] Datasource aponta para as variáveis do Compose (`DB_URL`, `DB_USER`, `DB_PASSWORD`).
+- [x] Flyway habilitado; JPA com `ddl-auto=validate` e timezone UTC.
+- [x] Actuator expõe `health` e `info`.
+- [x] `JWT_SECRET`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` são obrigatórios e validados no startup.
+- [x] Aplicação compila e o contexto carrega com o banco disponível.
 
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(config): configure datasource, flyway and actuator`
+**Completed**: 2026-11-08 - pending
 
 ---
 

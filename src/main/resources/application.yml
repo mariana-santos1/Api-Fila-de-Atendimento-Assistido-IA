@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: api-fila-de-atendimento-assistido-ia
+  datasource:
+    url: "${DB_URL:jdbc:mysql://localhost:3306/fila_ciclica?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}"
+    username: "${DB_USER:dev}"
+    password: "${DB_PASSWORD:dev}"
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  jackson:
+    time-zone: UTC
+
+server:
+  port: 8080
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  security:
+    jwt-secret: "${JWT_SECRET:dev-only-jwt-secret-change-me-0123456789abcdef}"
+  admin:
+    email: "${ADMIN_EMAIL:admin@fila.local}"
+    password: "${ADMIN_PASSWORD:admin12345}"
