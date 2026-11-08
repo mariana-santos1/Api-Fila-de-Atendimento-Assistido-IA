@@ -308,11 +308,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Login válido retorna 200 com `accessToken`, `role` e `expiresIn=3600`.
-- [ ] Credenciais inválidas retornam 401 `INVALID_CREDENTIALS` sem revelar e-mail.
-- [ ] Resposta não contém senha nem hash.
-- [ ] `AuthIT` cobre sucesso, falha e hash BCrypt no banco.
-- [ ] Test count: todos os testes de `AuthIT` passam; nenhum teste removido.
+- [x] Login válido retorna 200 com `accessToken`, `role` e `expiresIn=3600`.
+- [x] Credenciais inválidas retornam 401 `INVALID_CREDENTIALS` sem revelar e-mail.
+- [x] Resposta não contém senha nem hash.
+- [x] `AuthIT` cobre sucesso, falha e hash BCrypt no banco.
+- [x] Test count: todos os testes de `AuthIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
