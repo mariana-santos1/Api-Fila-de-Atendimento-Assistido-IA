@@ -1,11 +1,14 @@
 package com.fila.ciclica.api.queue;
 
 import com.fila.ciclica.common.ApiException;
+import com.fila.ciclica.common.PageResponse;
 import com.fila.ciclica.domain.Cycle;
 import com.fila.ciclica.domain.CycleLifecycleService;
 import com.fila.ciclica.domain.CycleStatus;
 import com.fila.ciclica.domain.Queue;
+import com.fila.ciclica.domain.Ticket;
 import com.fila.ciclica.domain.TicketStatus;
+import com.fila.ciclica.api.ticket.TicketResponse;
 import com.fila.ciclica.repository.CycleRepository;
 import com.fila.ciclica.repository.QueueRepository;
 import com.fila.ciclica.repository.TicketRepository;
@@ -15,6 +18,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,6 +130,59 @@ public class QueueService {
 
         cycleRepository.findByActiveQueueId(id)
                 .ifPresent(cycleLifecycleService::closeIfEmpty);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<QueueResponse> list(Boolean active, int page, int size) {
+        validatePagination(page, size);
+
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        Page<Queue> result = active == null
+                ? queueRepository.findAll(pageable)
+                : queueRepository.findByActive(active, pageable);
+
+        return PageResponse.of(result.map(queue -> QueueResponse.from(queue, activeCycle(queue.getId()))));
+    }
+
+    @Transactional(readOnly = true)
+    public QueueResponse getById(Long id) {
+        Queue queue = findQueue(id);
+        return QueueResponse.from(queue, activeCycle(queue.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public QueueStateResponse state(Long id) {
+        Queue queue = findQueue(id);
+        Cycle cycle = activeCycle(id);
+        if (cycle == null) {
+            return QueueStateResponse.empty(queue.getId(), queue.getName());
+        }
+
+        Ticket calledTicket = ticketRepository
+                .findFirstByCycleIdAndStatus(cycle.getId(), TicketStatus.CALLED)
+                .orElse(null);
+
+        return new QueueStateResponse(
+                queue.getId(),
+                queue.getName(),
+                cycle.getNumber(),
+                ticketRepository.countByCycleIdAndStatus(cycle.getId(), TicketStatus.WAITING),
+                ticketRepository.countByCycleIdAndStatus(cycle.getId(), TicketStatus.CALLED),
+                ticketRepository.countByCycleIdAndStatus(cycle.getId(), TicketStatus.COMPLETED),
+                ticketRepository.countByCycleIdAndStatus(cycle.getId(), TicketStatus.NO_SHOW),
+                ticketRepository.countByCycleIdAndStatus(cycle.getId(), TicketStatus.CANCELLED),
+                calledTicket == null ? null : TicketResponse.from(calledTicket));
+    }
+
+    private void validatePagination(int page, int size) {
+        if (page < 0) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST, "INVALID_PAGINATION", "Page must be zero or greater");
+        }
+        if (size < 1 || size > 100) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST, "INVALID_PAGE_SIZE", "Size must be between 1 and 100");
+        }
     }
 
     Queue findQueue(Long id) {

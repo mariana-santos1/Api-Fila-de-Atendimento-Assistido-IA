@@ -385,15 +385,16 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Detalhe retorna nome, prefixo, pesos, ativo e ciclo ativo.
-- [ ] Estado retorna `cycleNumber`, contagens por status e o ticket CALLED atual, se houver.
-- [ ] Filas inexistentes retornam 404 com código específico.
-- [ ] `QueueIT` cobre o estado com e sem ticket chamado.
-- [ ] Test count: todos os testes de `QueueIT` passam; nenhum teste removido.
+- [x] Detalhe retorna nome, prefixo, pesos, ativo e ciclo ativo.
+- [x] Estado retorna `cycleNumber`, contagens por status e o ticket CALLED atual, se houver.
+- [x] Filas inexistentes retornam 404 com código específico.
+- [x] `QueueIT` cobre o estado com e sem ticket chamado.
+- [x] Test count: todos os testes de `QueueIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(queue): add queue state endpoint`
+**Completed**: 2026-11-08 - pending
 
 ---
 

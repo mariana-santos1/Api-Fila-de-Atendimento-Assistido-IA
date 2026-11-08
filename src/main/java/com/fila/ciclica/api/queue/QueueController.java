@@ -1,5 +1,6 @@
 package com.fila.ciclica.api.queue;
 
+import com.fila.ciclica.common.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,6 +35,24 @@ public class QueueController {
     @PreAuthorize("hasRole('ADMIN')")
     public QueueResponse update(@PathVariable Long id, @Valid @RequestBody UpdateQueueRequest request) {
         return queueService.update(id, request);
+    }
+
+    @GetMapping
+    public PageResponse<QueueResponse> list(
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return queueService.list(active, page, size);
+    }
+
+    @GetMapping("/{id}")
+    public QueueResponse getById(@PathVariable Long id) {
+        return queueService.getById(id);
+    }
+
+    @GetMapping("/{id}/state")
+    public QueueStateResponse state(@PathVariable Long id) {
+        return queueService.state(id);
     }
 
     @DeleteMapping("/{id}")
