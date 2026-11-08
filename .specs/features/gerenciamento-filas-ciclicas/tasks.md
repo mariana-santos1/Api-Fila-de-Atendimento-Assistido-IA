@@ -172,14 +172,15 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `AbstractIntegrationTest` sobe `mysql:8.4` via Testcontainers e injeta datasource com `@DynamicPropertySource`.
-- [ ] `ProofReporter` implementa `TestWatcher` e imprime `PROOF PASSED: <displayName>` em teste bem-sucedido.
-- [ ] `ContextLoadIT` verifica que o contexto Spring sobe e que o Flyway aplica o schema.
-- [ ] Test count: todos os testes de `ContextLoadIT` passam; nenhum teste removido.
+- [x] `AbstractIntegrationTest` sobe `mysql:8.4` via Testcontainers e injeta datasource com `@DynamicPropertySource`.
+- [x] `ProofReporter` implementa `TestWatcher` e imprime `PROOF PASSED: <displayName>` em teste bem-sucedido.
+- [x] `ContextLoadIT` verifica que o contexto Spring sobe e que o Flyway aplica o schema.
+- [x] Test count: todos os testes de `ContextLoadIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `test(support): add Testcontainers base and proof reporter`
+**Completed**: 2026-11-08 - pending
 
 ---
 
