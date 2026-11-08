@@ -261,11 +261,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Erros de validação retornam 400 com `code=VALIDATION_ERROR` e `fields`.
-- [ ] `ApiException` mapeia código, status e detail para ProblemDetail.
-- [ ] `PageResponse` expõe `content`, `page`, `size`, `totalElements`, `totalPages`.
-- [ ] `ErrorHandlingTest` usa MockMvc standalone com um controller de fixture e cobre 400, 404, 409 e 500.
-- [ ] Test count: todos os testes de `ErrorHandlingTest` passam; nenhum teste removido.
+- [x] Erros de validação retornam 400 com `code=VALIDATION_ERROR` e `fields`.
+- [x] `ApiException` mapeia código, status e detail para ProblemDetail.
+- [x] `PageResponse` expõe `content`, `page`, `size`, `totalElements`, `totalPages`.
+- [x] `ErrorHandlingTest` usa MockMvc standalone com um controller de fixture e cobre 400, 404, 409 e 500.
+- [x] Test count: todos os testes de `ErrorHandlingTest` passam; nenhum teste removido.
 
 **Tests**: unit
 **Gate**: quick
