@@ -709,6 +709,7 @@ The feature's live state, written as it happens - a compaction gives no warning.
 
 **Dispatched:** Batch 1 (T1-T5) - 2026-11-08 - sent to a general worker; returned 2026-11-08.
 Batch 2 (T6-T11) - 2026-11-08 - sent to a general worker; returned 2026-11-08 (T6-T11 done, C1-C10 green).
+Batch 3 (T12-T16) - 2026-11-08 - sent to a general worker.
 
 **Walked:** none - the API has no screen; the independent tests are executed during Execute.
 
