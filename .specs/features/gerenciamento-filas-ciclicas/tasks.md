@@ -330,12 +330,12 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Startup cria ADMIN ativo se `ADMIN_EMAIL` não existir; não sobrescreve usuário existente.
-- [ ] ADMIN cria usuário e recebe 201 sem hash; e-mail duplicado retorna 409.
-- [ ] Usuário desativado não consegue autenticar.
-- [ ] Listagem é paginada, ordenada por nome e limitada a 100.
-- [ ] `AdminSeedIT`, `UserIT` e `SecurityIT` cobrem seed, CRUD, 401 e 403.
-- [ ] Test count: todos os testes dessas classes passam; nenhum teste removido.
+- [x] Startup cria ADMIN ativo se `ADMIN_EMAIL` não existir; não sobrescreve usuário existente.
+- [x] ADMIN cria usuário e recebe 201 sem hash; e-mail duplicado retorna 409.
+- [x] Usuário desativado não consegue autenticar.
+- [x] Listagem é paginada, ordenada por nome e limitada a 100.
+- [x] `AdminSeedIT`, `UserIT` e `SecurityIT` cobrem seed, CRUD, 401 e 403.
+- [x] Test count: todos os testes dessas classes passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full

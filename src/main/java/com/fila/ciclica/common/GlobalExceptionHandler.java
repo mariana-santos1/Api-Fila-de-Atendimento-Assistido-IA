@@ -43,8 +43,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ProblemDetail> handleApiException(ApiException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+    public ResponseEntity<ProblemDetail> handleApiException(ApiException exception) {        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 exception.getStatus(), exception.getDetail());
         problem.setTitle(exception.getStatus().getReasonPhrase());
         problem.setProperty("code", exception.getCode());
@@ -60,6 +59,16 @@ public class GlobalExceptionHandler {
         problem.setProperty("code", "NOT_FOUND");
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(Exception exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN, "Access is denied");
+        problem.setTitle("Forbidden");
+        problem.setProperty("code", "FORBIDDEN");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
     }
 
     @ExceptionHandler(Exception.class)
