@@ -226,6 +226,7 @@ T20 → T21
 **Tests**: none
 **Gate**: build
 **Commit**: `feat(domain): add JPA entities and enums`
+**Completed**: 2026-11-08 - 1a35e39
 
 ---
 
@@ -248,6 +249,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(repository): add JPA repositories and lock queries`
+**Completed**: 2026-11-08 - 2d78b93
 
 ---
 
@@ -270,6 +272,7 @@ T20 → T21
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(common): add ProblemDetail error handling`
+**Completed**: 2026-11-08 - 6749edb
 
 ---
 
@@ -295,6 +298,7 @@ T20 → T21
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(security): add JWT security infrastructure`
+**Completed**: 2026-11-08 - 2dd77c7
 
 ---
 
@@ -317,6 +321,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(auth): add login endpoint`
+**Completed**: 2026-11-08 - 1bd6ca9
 
 ---
 
@@ -340,6 +345,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(user): add admin seed and user management`
+**Completed**: 2026-11-08 - 6e0b67d
 
 ---
 
@@ -702,7 +708,7 @@ The feature's live state, written as it happens - a compaction gives no warning.
 **Gate note:** `validate_tasks.py --execute` reported the Build line red before T1 because the repository was empty (no `pom.xml`). T1 is the bootstrap task that creates the build; the gate is re-run immediately after T1 and before T2.
 
 **Dispatched:** Batch 1 (T1-T5) - 2026-11-08 - sent to a general worker; returned 2026-11-08.
-Batch 2 (T6-T11) - 2026-11-08 - sent to a general worker.
+Batch 2 (T6-T11) - 2026-11-08 - sent to a general worker; returned 2026-11-08 (T6-T11 done, C1-C10 green).
 
 **Walked:** none - the API has no screen; the independent tests are executed during Execute.
 
