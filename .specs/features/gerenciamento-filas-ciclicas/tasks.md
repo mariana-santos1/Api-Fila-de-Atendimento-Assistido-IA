@@ -285,12 +285,12 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `SecurityFilterChain` libera login e health e protege `/api/v1/**`.
-- [ ] `TokenService` emite JWT com `sub`, `role`, `iat`, `exp` de 3600 s.
-- [ ] `JwtDecoder` valida assinatura e expiração; `PasswordEncoder` usa BCrypt.
-- [ ] O startup falha se `JWT_SECRET` tiver menos de 32 caracteres.
-- [ ] `TokenServiceTest` cobre claims, expiração e assinatura inválida.
-- [ ] Test count: todos os testes de `TokenServiceTest` passam; nenhum teste removido.
+- [x] `SecurityFilterChain` libera login e health e protege `/api/v1/**`.
+- [x] `TokenService` emite JWT com `sub`, `role`, `iat`, `exp` de 3600 s.
+- [x] `JwtDecoder` valida assinatura e expiração; `PasswordEncoder` usa BCrypt.
+- [x] O startup falha se `JWT_SECRET` tiver menos de 32 caracteres.
+- [x] `TokenServiceTest` cobre claims, expiração e assinatura inválida.
+- [x] Test count: todos os testes de `TokenServiceTest` passam; nenhum teste removido.
 
 **Tests**: unit
 **Gate**: quick
