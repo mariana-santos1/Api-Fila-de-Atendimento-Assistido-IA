@@ -194,14 +194,15 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `V1__init_schema.sql` cria `users`, `queues`, `cycles`, `tickets`, `cycle_calls` com FKs e unique constraints do design.
-- [ ] `cycles.active_queue_id` tem índice único; `tickets.external_reference` é único por fila.
-- [ ] `MigrationIT` valida tabelas, colunas e constraints no MySQL 8.4.
-- [ ] Test count: todos os testes de `MigrationIT` passam; nenhum teste removido.
+- [x] `V1__init_schema.sql` cria `users`, `queues`, `cycles`, `tickets`, `cycle_calls` com FKs e unique constraints do design.
+- [x] `cycles.active_queue_id` tem índice único; `tickets.external_reference` é único por fila.
+- [x] `MigrationIT` valida tabelas, colunas e constraints no MySQL 8.4.
+- [x] Test count: todos os testes de `MigrationIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(db): add initial Flyway schema`
+**Completed**: 2026-11-08 - pending
 
 ---
 
