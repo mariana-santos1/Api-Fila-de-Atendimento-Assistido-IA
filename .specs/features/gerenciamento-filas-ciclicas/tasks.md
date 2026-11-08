@@ -239,11 +239,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `QueueRepository.findByIdForUpdate` usa `@Lock(PESSIMISTIC_WRITE)`.
-- [ ] `TicketRepository.findNextCandidate` ordena por `callsInCycle asc, cycleWeight desc, createdAt asc, id asc`.
-- [ ] Existem queries para `existsByCycleIdAndStatus`, `findByActiveQueueId` e busca por `externalReference`.
-- [ ] `RepositoryIT` cobre lock, ordenação e constraints únicas.
-- [ ] Test count: todos os testes de `RepositoryIT` passam; nenhum teste removido.
+- [x] `QueueRepository.findByIdForUpdate` usa `@Lock(PESSIMISTIC_WRITE)`.
+- [x] `TicketRepository.findNextCandidate` ordena por `callsInCycle asc, cycleWeight desc, createdAt asc, id asc`.
+- [x] Existem queries para `existsByCycleIdAndStatus`, `findByActiveQueueId` e busca por `externalReference`.
+- [x] `RepositoryIT` cobre lock, ordenação e constraints únicas.
+- [x] Test count: todos os testes de `RepositoryIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
