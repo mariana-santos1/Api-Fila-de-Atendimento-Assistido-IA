@@ -113,7 +113,7 @@ T20 → T21
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(bootstrap): create Spring Boot Maven project`
-**Completed**: 2026-11-08 - pending
+**Completed**: 2026-11-08 - b6c17d5
 
 ---
 
@@ -135,7 +135,7 @@ T20 → T21
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(docker): add MySQL compose service`
-**Completed**: 2026-11-08 - pending
+**Completed**: 2026-11-08 - ea3221a
 
 ---
 
@@ -158,7 +158,7 @@ T20 → T21
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(config): configure datasource, flyway and actuator`
-**Completed**: 2026-11-08 - pending
+**Completed**: 2026-11-08 - 32009c9
 
 ---
 
@@ -180,7 +180,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `test(support): add Testcontainers base and proof reporter`
-**Completed**: 2026-11-08 - pending
+**Completed**: 2026-11-08 - 7f41c78
 
 ---
 
@@ -202,7 +202,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(db): add initial Flyway schema`
-**Completed**: 2026-11-08 - pending
+**Completed**: 2026-11-08 - 6b6cdcc
 
 ---
 
@@ -697,11 +697,12 @@ Proof: run ops | PROOF PASSED: C37 transition log carries cycle and statuses
 
 The feature's live state, written as it happens - a compaction gives no warning.
 
-**Settled mid-build:** none yet.
+**Settled mid-build:** Build gate re-run after T1: `mvn -q verify` green (2 ITs).
 
 **Gate note:** `validate_tasks.py --execute` reported the Build line red before T1 because the repository was empty (no `pom.xml`). T1 is the bootstrap task that creates the build; the gate is re-run immediately after T1 and before T2.
 
-**Dispatched:** Batch 1 (T1-T5) - 2026-11-08 - sent to a general worker.
+**Dispatched:** Batch 1 (T1-T5) - 2026-11-08 - sent to a general worker; returned 2026-11-08.
+Batch 2 (T6-T11) - 2026-11-08 - sent to a general worker.
 
 **Walked:** none - the API has no screen; the independent tests are executed during Execute.
 
