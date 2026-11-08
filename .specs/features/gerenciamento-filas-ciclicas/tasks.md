@@ -127,14 +127,15 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Serviço `mysql` usa `mysql:8.4`, porta 3306, database `fila_ciclica`, usuário e senha de desenvolvimento.
-- [ ] Healthcheck `mysqladmin ping` com retries e volume nomeado para persistência.
-- [ ] `.env.example` documenta as variáveis de ambiente.
-- [ ] `docker compose config` retorna sem erro.
+- [x] Serviço `mysql` usa `mysql:8.4`, porta 3306, database `fila_ciclica`, usuário e senha de desenvolvimento.
+- [x] Healthcheck `mysqladmin ping` com retries e volume nomeado para persistência.
+- [x] `.env.example` documenta as variáveis de ambiente.
+- [x] `docker compose config` retorna sem erro.
 
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(docker): add MySQL compose service`
+**Completed**: 2026-11-08 - pending
 
 ---
 
