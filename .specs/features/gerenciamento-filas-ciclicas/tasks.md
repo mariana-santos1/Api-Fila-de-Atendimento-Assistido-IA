@@ -105,14 +105,15 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `pom.xml` declara Java 21, Spring Boot 4.1.2, starters web, validation, data-jpa, security, oauth2-resource-server, actuator, Flyway, MySQL, test e Testcontainers.
-- [ ] Classe `FilaCiclicaApplication` compila com `@SpringBootApplication`.
-- [ ] `.gitignore` e Maven wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`) existem.
-- [ ] `mvn -q -DskipTests package` compila.
+- [x] `pom.xml` declara Java 21, Spring Boot 4.1.2, starters web, validation, data-jpa, security, oauth2-resource-server, actuator, Flyway, MySQL, test e Testcontainers.
+- [x] Classe `FilaCiclicaApplication` compila com `@SpringBootApplication`.
+- [x] `.gitignore` e Maven wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`) existem.
+- [x] `mvn -q -DskipTests package` compila.
 
 **Tests**: none
 **Gate**: build
 **Commit**: `chore(bootstrap): create Spring Boot Maven project`
+**Completed**: 2026-11-08 - pending
 
 ---
 
