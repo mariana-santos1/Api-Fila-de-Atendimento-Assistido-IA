@@ -1,0 +1,111 @@
+package com.fila.ciclica.api.call;
+
+import com.fila.ciclica.api.ticket.TicketResponse;
+import com.fila.ciclica.common.ApiException;
+import com.fila.ciclica.domain.Cycle;
+import com.fila.ciclica.domain.CycleCall;
+import com.fila.ciclica.domain.CycleScheduler;
+import com.fila.ciclica.domain.Queue;
+import com.fila.ciclica.domain.Ticket;
+import com.fila.ciclica.domain.TicketStatus;
+import com.fila.ciclica.domain.User;
+import com.fila.ciclica.repository.CycleCallRepository;
+import com.fila.ciclica.repository.CycleRepository;
+import com.fila.ciclica.repository.QueueRepository;
+import com.fila.ciclica.repository.TicketRepository;
+import com.fila.ciclica.repository.UserRepository;
+import java.time.Instant;
+import java.util.List;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class CallService {
+
+    private final QueueRepository queueRepository;
+    private final CycleRepository cycleRepository;
+    private final TicketRepository ticketRepository;
+    private final CycleCallRepository cycleCallRepository;
+    private final UserRepository userRepository;
+    private final CycleScheduler cycleScheduler;
+
+    public CallService(
+            QueueRepository queueRepository,
+            CycleRepository cycleRepository,
+            TicketRepository ticketRepository,
+            CycleCallRepository cycleCallRepository,
+            UserRepository userRepository,
+            CycleScheduler cycleScheduler) {
+        this.queueRepository = queueRepository;
+        this.cycleRepository = cycleRepository;
+        this.ticketRepository = ticketRepository;
+        this.cycleCallRepository = cycleCallRepository;
+        this.userRepository = userRepository;
+        this.cycleScheduler = cycleScheduler;
+    }
+
+    @Transactional
+    public TicketResponse callNext(Long queueId, String attendantEmail) {
+        Queue queue = queueRepository.findByIdForUpdate(queueId)
+                .orElseThrow(this::queueNotFound);
+
+        if (!queue.isActive()) {
+            throw queueInactive();
+        }
+
+        Cycle cycle = cycleRepository.findByActiveQueueId(queueId)
+                .orElseThrow(this::queueInactive);
+
+        if (ticketRepository.existsByCycleIdAndStatus(cycle.getId(), TicketStatus.CALLED)) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "ACTIVE_CALL_EXISTS",
+                    "Queue already has an active call");
+        }
+
+        List<Ticket> candidates = ticketRepository.findNextCandidates(cycle.getId(), Pageable.unpaged());
+        Ticket ticket = cycleScheduler.selectNext(candidates)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.CONFLICT,
+                        "NO_TICKET_AVAILABLE",
+                        "No waiting ticket is eligible in the active cycle"));
+
+        Instant now = Instant.now();
+        ticket.setCallsInCycle(ticket.getCallsInCycle() + 1);
+        ticket.setStatus(TicketStatus.CALLED);
+        ticket.setCalledAt(now);
+        ticket.setUpdatedAt(now);
+        ticket = ticketRepository.saveAndFlush(ticket);
+
+        User attendant = userRepository.findByEmail(attendantEmail)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Authenticated user not found"));
+
+        CycleCall cycleCall = new CycleCall();
+        cycleCall.setCycle(cycle);
+        cycleCall.setTicket(ticket);
+        cycleCall.setAttendant(attendant);
+        cycleCall.setSequenceNumber(nextSequenceNumber(cycle.getId()));
+        cycleCall.setCalledAt(now);
+        cycleCallRepository.saveAndFlush(cycleCall);
+
+        return TicketResponse.from(ticket);
+    }
+
+    private int nextSequenceNumber(Long cycleId) {
+        return cycleCallRepository.findTopByCycleIdOrderBySequenceNumberDesc(cycleId)
+                .map(last -> last.getSequenceNumber() + 1)
+                .orElse(1);
+    }
+
+    private ApiException queueNotFound() {
+        return new ApiException(HttpStatus.NOT_FOUND, "QUEUE_NOT_FOUND", "Queue not found");
+    }
+
+    private ApiException queueInactive() {
+        return new ApiException(
+                HttpStatus.CONFLICT, "QUEUE_INACTIVE", "Queue has no active cycle");
+    }
+}

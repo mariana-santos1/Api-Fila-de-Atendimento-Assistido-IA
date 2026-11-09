@@ -503,15 +503,16 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Chamada incrementa `callsInCycle`, seta CALLED e grava `CycleCall`.
-- [ ] Chamada com CALLED existente retorna 409 `ACTIVE_CALL_EXISTS`.
-- [ ] Sem candidato retorna 409 `NO_TICKET_AVAILABLE` sem alterar o ciclo.
-- [ ] `CallNextIT` cobre sucesso, chamada ativa e ausência de candidato.
-- [ ] Test count: todos os testes de `CallNextIT` passam; nenhum teste removido.
+- [x] Chamada incrementa `callsInCycle`, seta CALLED e grava `CycleCall`.
+- [x] Chamada com CALLED existente retorna 409 `ACTIVE_CALL_EXISTS`.
+- [x] Sem candidato retorna 409 `NO_TICKET_AVAILABLE` sem alterar o ciclo.
+- [x] `CallNextIT` cobre sucesso, chamada ativa e ausência de candidato.
+- [x] Test count: todos os testes de `CallNextIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(call): add call next endpoint`
+**Completed**: 2026-11-09 - pending
 
 ---
 
