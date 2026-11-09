@@ -126,6 +126,17 @@ public class Queue {
         this.ticketCounter = ticketCounter;
     }
 
+    /**
+     * Returns the configured maximum number of call attempts for the given priority.
+     */
+    public int weightFor(Priority priority) {
+        return switch (priority) {
+            case NORMAL -> weightNormal;
+            case PREFERENTIAL -> weightPreferential;
+            case URGENT -> weightUrgent;
+        };
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }

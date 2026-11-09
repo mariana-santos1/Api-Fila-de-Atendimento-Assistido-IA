@@ -394,7 +394,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(queue): add queue state endpoint`
-**Completed**: 2026-11-08 - pending
+**Completed**: 2026-11-08 - 4a2258b
 
 ---
 
@@ -410,16 +410,17 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Criação atribui código, status WAITING, `callsInCycle=0` e `cycleWeight` correto.
-- [ ] Prioridade omitida vira NORMAL; prioridade inválida retorna 400.
-- [ ] `externalReference` repetida retorna o ticket existente com 200.
-- [ ] Fila inativa retorna 409 `QUEUE_INACTIVE`.
-- [ ] `TicketIT` cobre os cinco critérios de criação.
-- [ ] Test count: todos os testes de `TicketIT` passam; nenhum teste removido.
+- [x] Criação atribui código, status WAITING, `callsInCycle=0` e `cycleWeight` correto.
+- [x] Prioridade omitida vira NORMAL; prioridade inválida retorna 400.
+- [x] `externalReference` repetida retorna o ticket existente com 200.
+- [x] Fila inativa retorna 409 `QUEUE_INACTIVE`.
+- [x] `TicketIT` cobre os cinco critérios de criação.
+- [x] Test count: todos os testes de `TicketIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ticket): add ticket creation`
+**Completed**: 2026-11-09 - pending
 
 ---
 
