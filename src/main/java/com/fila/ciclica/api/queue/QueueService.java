@@ -129,7 +129,7 @@ public class QueueService {
         queueRepository.save(queue);
 
         cycleRepository.findByActiveQueueId(id)
-                .ifPresent(cycleLifecycleService::closeIfEmpty);
+                .ifPresent(cycleLifecycleService::closeWithoutRollover);
     }
 
     @Transactional(readOnly = true)

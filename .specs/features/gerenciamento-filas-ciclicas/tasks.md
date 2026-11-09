@@ -526,16 +526,17 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Complete só a partir de CALLED e seta COMPLETED com `finishedAt`.
-- [ ] No-answer devolve a WAITING abaixo do peso e seta NO_SHOW ao esgotar.
-- [ ] No-show explícito seta NO_SHOW; transições inválidas retornam 409.
-- [ ] Fechamento cria o próximo ciclo e reenfileira NO_SHOW com tentativas zeradas.
-- [ ] `TicketTransitionIT` e `CycleLifecycleIT` cobrem os cinco critérios.
-- [ ] Test count: todos os testes dessas classes passam; nenhum teste removido.
+- [x] Complete só a partir de CALLED e seta COMPLETED com `finishedAt`.
+- [x] No-answer devolve a WAITING abaixo do peso e seta NO_SHOW ao esgotar.
+- [x] No-show explícito seta NO_SHOW; transições inválidas retornam 409.
+- [x] Fechamento cria o próximo ciclo e reenfileira NO_SHOW com tentativas zeradas.
+- [x] `TicketTransitionIT` e `CycleLifecycleIT` cobrem os cinco critérios.
+- [x] Test count: todos os testes dessas classes passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(call): add attendance outcomes and cycle rollover`
+**Completed**: 2026-11-09 - pending
 
 ---
 

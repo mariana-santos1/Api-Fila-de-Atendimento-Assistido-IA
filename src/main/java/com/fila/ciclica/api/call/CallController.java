@@ -23,4 +23,22 @@ public class CallController {
     public TicketResponse callNext(@PathVariable Long queueId, Principal principal) {
         return callService.callNext(queueId, principal.getName());
     }
+
+    @PostMapping("/tickets/{publicId}/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANT')")
+    public TicketResponse complete(@PathVariable String publicId) {
+        return callService.complete(publicId);
+    }
+
+    @PostMapping("/tickets/{publicId}/no-answer")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANT')")
+    public TicketResponse noAnswer(@PathVariable String publicId) {
+        return callService.noAnswer(publicId);
+    }
+
+    @PostMapping("/tickets/{publicId}/no-show")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANT')")
+    public TicketResponse noShow(@PathVariable String publicId) {
+        return callService.noShow(publicId);
+    }
 }

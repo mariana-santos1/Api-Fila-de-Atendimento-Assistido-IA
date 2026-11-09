@@ -4,6 +4,7 @@ import com.fila.ciclica.api.ticket.TicketResponse;
 import com.fila.ciclica.common.ApiException;
 import com.fila.ciclica.domain.Cycle;
 import com.fila.ciclica.domain.CycleCall;
+import com.fila.ciclica.domain.CycleLifecycleService;
 import com.fila.ciclica.domain.CycleScheduler;
 import com.fila.ciclica.domain.Queue;
 import com.fila.ciclica.domain.Ticket;
@@ -30,6 +31,7 @@ public class CallService {
     private final CycleCallRepository cycleCallRepository;
     private final UserRepository userRepository;
     private final CycleScheduler cycleScheduler;
+    private final CycleLifecycleService cycleLifecycleService;
 
     public CallService(
             QueueRepository queueRepository,
@@ -37,13 +39,15 @@ public class CallService {
             TicketRepository ticketRepository,
             CycleCallRepository cycleCallRepository,
             UserRepository userRepository,
-            CycleScheduler cycleScheduler) {
+            CycleScheduler cycleScheduler,
+            CycleLifecycleService cycleLifecycleService) {
         this.queueRepository = queueRepository;
         this.cycleRepository = cycleRepository;
         this.ticketRepository = ticketRepository;
         this.cycleCallRepository = cycleCallRepository;
         this.userRepository = userRepository;
         this.cycleScheduler = cycleScheduler;
+        this.cycleLifecycleService = cycleLifecycleService;
     }
 
     @Transactional
@@ -92,6 +96,60 @@ public class CallService {
         cycleCallRepository.saveAndFlush(cycleCall);
 
         return TicketResponse.from(ticket);
+    }
+
+    @Transactional
+    public TicketResponse complete(String publicId) {
+        Ticket ticket = findCalledTicket(publicId);
+        Instant now = Instant.now();
+        ticket.setStatus(TicketStatus.COMPLETED);
+        ticket.setFinishedAt(now);
+        ticket.setUpdatedAt(now);
+        ticket = ticketRepository.saveAndFlush(ticket);
+
+        cycleLifecycleService.closeIfEmpty(ticket.getCycle());
+        return TicketResponse.from(ticket);
+    }
+
+    @Transactional
+    public TicketResponse noAnswer(String publicId) {
+        Ticket ticket = findCalledTicket(publicId);
+        Instant now = Instant.now();
+        TicketStatus outcome = cycleScheduler.applyNoAnswer(ticket);
+        ticket.setStatus(outcome);
+        ticket.setFinishedAt(outcome == TicketStatus.NO_SHOW ? now : null);
+        ticket.setUpdatedAt(now);
+        ticket = ticketRepository.saveAndFlush(ticket);
+
+        cycleLifecycleService.closeIfEmpty(ticket.getCycle());
+        return TicketResponse.from(ticket);
+    }
+
+    @Transactional
+    public TicketResponse noShow(String publicId) {
+        Ticket ticket = findCalledTicket(publicId);
+        Instant now = Instant.now();
+        ticket.setStatus(TicketStatus.NO_SHOW);
+        ticket.setFinishedAt(now);
+        ticket.setUpdatedAt(now);
+        ticket = ticketRepository.saveAndFlush(ticket);
+
+        cycleLifecycleService.closeIfEmpty(ticket.getCycle());
+        return TicketResponse.from(ticket);
+    }
+
+    private Ticket findCalledTicket(String publicId) {
+        Ticket ticket = ticketRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.NOT_FOUND, "TICKET_NOT_FOUND", "Ticket not found"));
+
+        if (ticket.getStatus() != TicketStatus.CALLED) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "INVALID_STATE",
+                    "Only a called ticket can be concluded or have its outcome recorded");
+        }
+        return ticket;
     }
 
     private int nextSequenceNumber(Long cycleId) {
