@@ -2,6 +2,7 @@ package com.fila.ciclica.api.ticket;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -10,9 +11,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fila.ciclica.domain.Priority;
 import com.fila.ciclica.domain.Cycle;
 import com.fila.ciclica.domain.CycleStatus;
+import com.fila.ciclica.domain.Queue;
 import com.fila.ciclica.domain.Ticket;
 import com.fila.ciclica.domain.TicketStatus;
 import com.fila.ciclica.repository.CycleRepository;
+import com.fila.ciclica.repository.QueueRepository;
 import com.fila.ciclica.repository.TicketRepository;
 import com.fila.ciclica.support.AbstractIntegrationTest;
 import com.fila.ciclica.support.ProofReporter;
@@ -36,6 +39,9 @@ class TicketIT extends AbstractIntegrationTest {
 
     @Autowired
     private CycleRepository cycleRepository;
+
+    @Autowired
+    private QueueRepository queueRepository;
 
     @Test
     @DisplayName("C17 ticket creation codes and snapshots weight")
@@ -273,6 +279,103 @@ class TicketIT extends AbstractIntegrationTest {
         assertThat(closed.getStatus()).isEqualTo(CycleStatus.CLOSED);
         assertThat(closed.getActiveQueueId()).isNull();
         assertThat(closed.getClosedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("C22 ticket list filters and paginates")
+    void ticketListFiltersAndPaginates() throws Exception {
+        String token = adminToken();
+        String prefix = uniquePrefix();
+        long queueId = createQueue(token, uniqueName("list"), prefix, 1, 2, 3);
+
+        Queue queue = queueRepository.findById(queueId).orElseThrow();
+        Cycle cycle = cycleRepository.findByActiveQueueId(queueId).orElseThrow();
+
+        Ticket waitingNormal = ticketRepository.saveAndFlush(
+                newTicket(queue, cycle, prefix + "-8001", Priority.NORMAL, TicketStatus.WAITING));
+        Ticket waitingUrgent = ticketRepository.saveAndFlush(
+                newTicket(queue, cycle, prefix + "-8002", Priority.URGENT, TicketStatus.WAITING));
+        ticketRepository.saveAndFlush(
+                newTicket(queue, cycle, prefix + "-8003", Priority.PREFERENTIAL, TicketStatus.CALLED));
+        ticketRepository.saveAndFlush(
+                newTicket(queue, cycle, prefix + "-8004", Priority.NORMAL, TicketStatus.COMPLETED));
+        ticketRepository.saveAndFlush(
+                newTicket(queue, cycle, prefix + "-8005", Priority.URGENT, TicketStatus.CANCELLED));
+
+        mockMvc.perform(get("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .param("status", "WAITING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].status").value("WAITING"))
+                .andExpect(jsonPath("$.content[1].status").value("WAITING"));
+
+        mockMvc.perform(get("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .param("priority", "URGENT"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[0].priority").value("URGENT"))
+                .andExpect(jsonPath("$.content[1].priority").value("URGENT"));
+
+        mockMvc.perform(get("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .param("status", "WAITING")
+                        .param("priority", "NORMAL"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].publicId").value(waitingNormal.getPublicId()));
+
+        mockMvc.perform(get("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(5))
+                .andExpect(jsonPath("$.totalPages").value(3));
+
+        mockMvc.perform(get("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .param("size", "101"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/v1/tickets/{publicId}", waitingUrgent.getPublicId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.publicId").value(waitingUrgent.getPublicId()))
+                .andExpect(jsonPath("$.code").value(prefix + "-8002"));
+
+        mockMvc.perform(get("/api/v1/tickets/{publicId}", UUID.randomUUID().toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TICKET_NOT_FOUND"));
+
+        mockMvc.perform(get("/api/v1/queues/{queueId}/tickets", 999999)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("QUEUE_NOT_FOUND"));
+    }
+
+    private Ticket newTicket(
+            Queue queue, Cycle cycle, String code, Priority priority, TicketStatus status) {
+        java.time.Instant now = java.time.Instant.now();
+        Ticket ticket = new Ticket();
+        ticket.setPublicId(UUID.randomUUID().toString());
+        ticket.setQueue(queue);
+        ticket.setCycle(cycle);
+        ticket.setCode(code);
+        ticket.setCustomerName("Customer " + code);
+        ticket.setPriority(priority);
+        ticket.setStatus(status);
+        ticket.setCallsInCycle(status == TicketStatus.CALLED ? 1 : 0);
+        ticket.setCycleWeight(queue.weightFor(priority));
+        ticket.setCreatedAt(now);
+        ticket.setUpdatedAt(now);
+        return ticket;
     }
 
     private long createQueue(

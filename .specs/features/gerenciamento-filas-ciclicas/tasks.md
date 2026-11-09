@@ -457,14 +457,15 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Listagem filtra por status e prioridade e limita `size` a 100.
-- [ ] Detalhe por `publicId` retorna 404 para UUID inexistente.
-- [ ] `TicketIT` cobre filtros, paginação e 400 para `size>100`.
-- [ ] Test count: todos os testes de `TicketIT` passam; nenhum teste removido.
+- [x] Listagem filtra por status e prioridade e limita `size` a 100.
+- [x] Detalhe por `publicId` retorna 404 para UUID inexistente.
+- [x] `TicketIT` cobre filtros, paginação e 400 para `size>100`.
+- [x] Test count: todos os testes de `TicketIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ticket): add ticket listing and detail`
+**Completed**: 2026-11-09 - pending
 
 ---
 

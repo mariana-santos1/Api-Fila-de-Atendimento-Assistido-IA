@@ -1,6 +1,7 @@
 package com.fila.ciclica.api.ticket;
 
 import com.fila.ciclica.common.ApiException;
+import com.fila.ciclica.common.PageResponse;
 import com.fila.ciclica.domain.Cycle;
 import com.fila.ciclica.domain.CycleLifecycleService;
 import com.fila.ciclica.domain.Priority;
@@ -14,6 +15,9 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,6 +94,43 @@ public class TicketService {
         return new TicketCreationResult(TicketResponse.from(ticket), true);
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<TicketResponse> list(
+            Long queueId, String status, String priority, int page, int size) {
+        if (!queueRepository.existsById(queueId)) {
+            throw queueNotFound();
+        }
+        validatePagination(page, size);
+
+        TicketStatus statusFilter = parseStatus(status);
+        Priority priorityFilter = parsePriorityFilter(priority);
+
+        PageRequest pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by(Sort.Direction.ASC, "id")));
+
+        Page<Ticket> result;
+        if (statusFilter != null && priorityFilter != null) {
+            result = ticketRepository.findByQueueIdAndStatusAndPriority(
+                    queueId, statusFilter, priorityFilter, pageable);
+        } else if (statusFilter != null) {
+            result = ticketRepository.findByQueueIdAndStatus(queueId, statusFilter, pageable);
+        } else if (priorityFilter != null) {
+            result = ticketRepository.findByQueueIdAndPriority(queueId, priorityFilter, pageable);
+        } else {
+            result = ticketRepository.findByQueueId(queueId, pageable);
+        }
+
+        return PageResponse.of(result.map(TicketResponse::from));
+    }
+
+    @Transactional(readOnly = true)
+    public TicketResponse getByPublicId(String publicId) {
+        return TicketResponse.from(ticketRepository.findByPublicId(publicId)
+                .orElseThrow(this::ticketNotFound));
+    }
+
     @Transactional
     public TicketResponse changePriority(String publicId, PriorityChangeRequest request) {
         Ticket ticket = ticketRepository.findByPublicId(publicId)
@@ -111,8 +152,7 @@ public class TicketService {
     }
 
     @Transactional
-    public void cancel(String publicId) {
-        Ticket ticket = ticketRepository.findByPublicId(publicId)
+    public void cancel(String publicId) {        Ticket ticket = ticketRepository.findByPublicId(publicId)
                 .orElseThrow(this::ticketNotFound);
 
         if (ticket.getStatus() != TicketStatus.WAITING
@@ -143,6 +183,35 @@ public class TicketService {
             return Priority.valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             throw invalidPriority();
+        }
+    }
+
+    Priority parsePriorityFilter(String raw) {
+        return raw == null || raw.isBlank() ? null : parsePriority(raw, false);
+    }
+
+    TicketStatus parseStatus(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return TicketStatus.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_STATUS",
+                    "Status must be WAITING, CALLED, COMPLETED, NO_SHOW or CANCELLED");
+        }
+    }
+
+    void validatePagination(int page, int size) {
+        if (page < 0) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST, "INVALID_PAGINATION", "Page must be zero or greater");
+        }
+        if (size < 1 || size > 100) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST, "INVALID_PAGE_SIZE", "Size must be between 1 and 100");
         }
     }
 

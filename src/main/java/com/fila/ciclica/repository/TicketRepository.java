@@ -1,10 +1,12 @@
 package com.fila.ciclica.repository;
 
+import com.fila.ciclica.domain.Priority;
 import com.fila.ciclica.domain.Ticket;
 import com.fila.ciclica.domain.TicketStatus;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,6 +30,15 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     boolean existsByQueueIdAndStatusIn(Long queueId, Collection<TicketStatus> statuses);
 
     List<Ticket> findByCycleIdOrderByCreatedAtAsc(Long cycleId);
+
+    Page<Ticket> findByQueueId(Long queueId, Pageable pageable);
+
+    Page<Ticket> findByQueueIdAndStatus(Long queueId, TicketStatus status, Pageable pageable);
+
+    Page<Ticket> findByQueueIdAndPriority(Long queueId, Priority priority, Pageable pageable);
+
+    Page<Ticket> findByQueueIdAndStatusAndPriority(
+            Long queueId, TicketStatus status, Priority priority, Pageable pageable);
 
     default Optional<Ticket> findNextCandidate(Long cycleId) {
         return findNextCandidates(cycleId, PageRequest.of(0, 1)).stream().findFirst();
