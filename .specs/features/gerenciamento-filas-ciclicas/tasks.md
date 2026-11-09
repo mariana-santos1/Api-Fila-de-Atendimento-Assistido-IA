@@ -481,14 +481,15 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `CycleScheduler.selectNext` ordena por `callsInCycle`, `cycleWeight`, `createdAt`, `id`.
-- [ ] Tickets com `callsInCycle >= cycleWeight` não são candidatos.
-- [ ] `CycleSchedulerTest` cobre empate, prioridade, idade e limite de tentativas.
-- [ ] Test count: todos os testes de `CycleSchedulerTest` passam; nenhum teste removido.
+- [x] `CycleScheduler.selectNext` ordena por `callsInCycle`, `cycleWeight`, `createdAt`, `id`.
+- [x] Tickets com `callsInCycle >= cycleWeight` não são candidatos.
+- [x] `CycleSchedulerTest` cobre empate, prioridade, idade e limite de tentativas.
+- [x] Test count: todos os testes de `CycleSchedulerTest` passam; nenhum teste removido.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(domain): add cycle scheduler`
+**Completed**: 2026-11-09 - pending
 
 ---
 
