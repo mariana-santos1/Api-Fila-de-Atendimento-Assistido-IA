@@ -1,5 +1,6 @@
 package com.fila.ciclica.domain;
 
+import com.fila.ciclica.observability.TicketTransitionLogger;
 import com.fila.ciclica.repository.CycleRepository;
 import com.fila.ciclica.repository.TicketRepository;
 import java.time.Instant;
@@ -19,10 +20,15 @@ public class CycleLifecycleService {
 
     private final CycleRepository cycleRepository;
     private final TicketRepository ticketRepository;
+    private final TicketTransitionLogger transitionLogger;
 
-    public CycleLifecycleService(CycleRepository cycleRepository, TicketRepository ticketRepository) {
+    public CycleLifecycleService(
+            CycleRepository cycleRepository,
+            TicketRepository ticketRepository,
+            TicketTransitionLogger transitionLogger) {
         this.cycleRepository = cycleRepository;
         this.ticketRepository = ticketRepository;
+        this.transitionLogger = transitionLogger;
     }
 
     /**
@@ -92,6 +98,12 @@ public class CycleLifecycleService {
             ticket.setFinishedAt(null);
             ticket.setUpdatedAt(now);
             ticketRepository.save(ticket);
+            transitionLogger.log(
+                    next.getQueue().getId(),
+                    ticket.getCode(),
+                    next.getNumber(),
+                    TicketStatus.NO_SHOW,
+                    TicketStatus.WAITING);
         }
         ticketRepository.flush();
     }

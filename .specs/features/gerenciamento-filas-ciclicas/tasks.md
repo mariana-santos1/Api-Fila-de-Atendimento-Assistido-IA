@@ -573,15 +573,16 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `/actuator/health` retorna status da aplicação e do banco.
-- [ ] Cada transição loga queue id, ticket code, cycle number, status anterior e novo, sem dados pessoais.
-- [ ] `OperationsIT` cobre health e a linha de log de uma transição.
-- [ ] `README.md` documenta `docker compose up`, variáveis de ambiente, `mvn spring-boot:run` e exemplos curl.
-- [ ] Test count: todos os testes de `OperationsIT` passam; nenhum teste removido.
+- [x] `/actuator/health` retorna status da aplicação e do banco.
+- [x] Cada transição loga queue id, ticket code, cycle number, status anterior e novo, sem dados pessoais.
+- [x] `OperationsIT` cobre health e a linha de log de uma transição.
+- [x] `README.md` documenta `docker compose up`, variáveis de ambiente, `mvn spring-boot:run` e exemplos curl.
+- [x] Test count: todos os testes de `OperationsIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ops): add health, transition logs and README`
+**Completed**: 2026-11-09 - pending
 
 ---
 

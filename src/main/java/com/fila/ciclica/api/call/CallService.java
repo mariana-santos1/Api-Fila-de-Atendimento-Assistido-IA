@@ -10,6 +10,7 @@ import com.fila.ciclica.domain.Queue;
 import com.fila.ciclica.domain.Ticket;
 import com.fila.ciclica.domain.TicketStatus;
 import com.fila.ciclica.domain.User;
+import com.fila.ciclica.observability.TicketTransitionLogger;
 import com.fila.ciclica.repository.CycleCallRepository;
 import com.fila.ciclica.repository.CycleRepository;
 import com.fila.ciclica.repository.QueueRepository;
@@ -32,6 +33,7 @@ public class CallService {
     private final UserRepository userRepository;
     private final CycleScheduler cycleScheduler;
     private final CycleLifecycleService cycleLifecycleService;
+    private final TicketTransitionLogger transitionLogger;
 
     public CallService(
             QueueRepository queueRepository,
@@ -40,7 +42,8 @@ public class CallService {
             CycleCallRepository cycleCallRepository,
             UserRepository userRepository,
             CycleScheduler cycleScheduler,
-            CycleLifecycleService cycleLifecycleService) {
+            CycleLifecycleService cycleLifecycleService,
+            TicketTransitionLogger transitionLogger) {
         this.queueRepository = queueRepository;
         this.cycleRepository = cycleRepository;
         this.ticketRepository = ticketRepository;
@@ -48,6 +51,7 @@ public class CallService {
         this.userRepository = userRepository;
         this.cycleScheduler = cycleScheduler;
         this.cycleLifecycleService = cycleLifecycleService;
+        this.transitionLogger = transitionLogger;
     }
 
     @Transactional
@@ -77,11 +81,18 @@ public class CallService {
                         "No waiting ticket is eligible in the active cycle"));
 
         Instant now = Instant.now();
+        TicketStatus previousStatus = ticket.getStatus();
         ticket.setCallsInCycle(ticket.getCallsInCycle() + 1);
         ticket.setStatus(TicketStatus.CALLED);
         ticket.setCalledAt(now);
         ticket.setUpdatedAt(now);
         ticket = ticketRepository.saveAndFlush(ticket);
+        transitionLogger.log(
+                queue.getId(),
+                ticket.getCode(),
+                cycle.getNumber(),
+                previousStatus,
+                TicketStatus.CALLED);
 
         User attendant = userRepository.findByEmail(attendantEmail)
                 .orElseThrow(() -> new ApiException(
@@ -102,10 +113,17 @@ public class CallService {
     public TicketResponse complete(String publicId) {
         Ticket ticket = findCalledTicket(publicId);
         Instant now = Instant.now();
+        int cycleNumber = ticket.getCycle().getNumber();
         ticket.setStatus(TicketStatus.COMPLETED);
         ticket.setFinishedAt(now);
         ticket.setUpdatedAt(now);
         ticket = ticketRepository.saveAndFlush(ticket);
+        transitionLogger.log(
+                ticket.getQueue().getId(),
+                ticket.getCode(),
+                cycleNumber,
+                TicketStatus.CALLED,
+                TicketStatus.COMPLETED);
 
         cycleLifecycleService.closeIfEmpty(ticket.getCycle());
         return TicketResponse.from(ticket);
@@ -115,11 +133,18 @@ public class CallService {
     public TicketResponse noAnswer(String publicId) {
         Ticket ticket = findCalledTicket(publicId);
         Instant now = Instant.now();
+        int cycleNumber = ticket.getCycle().getNumber();
         TicketStatus outcome = cycleScheduler.applyNoAnswer(ticket);
         ticket.setStatus(outcome);
         ticket.setFinishedAt(outcome == TicketStatus.NO_SHOW ? now : null);
         ticket.setUpdatedAt(now);
         ticket = ticketRepository.saveAndFlush(ticket);
+        transitionLogger.log(
+                ticket.getQueue().getId(),
+                ticket.getCode(),
+                cycleNumber,
+                TicketStatus.CALLED,
+                outcome);
 
         cycleLifecycleService.closeIfEmpty(ticket.getCycle());
         return TicketResponse.from(ticket);
@@ -129,10 +154,17 @@ public class CallService {
     public TicketResponse noShow(String publicId) {
         Ticket ticket = findCalledTicket(publicId);
         Instant now = Instant.now();
+        int cycleNumber = ticket.getCycle().getNumber();
         ticket.setStatus(TicketStatus.NO_SHOW);
         ticket.setFinishedAt(now);
         ticket.setUpdatedAt(now);
         ticket = ticketRepository.saveAndFlush(ticket);
+        transitionLogger.log(
+                ticket.getQueue().getId(),
+                ticket.getCode(),
+                cycleNumber,
+                TicketStatus.CALLED,
+                TicketStatus.NO_SHOW);
 
         cycleLifecycleService.closeIfEmpty(ticket.getCycle());
         return TicketResponse.from(ticket);

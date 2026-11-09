@@ -8,6 +8,7 @@ import com.fila.ciclica.domain.Priority;
 import com.fila.ciclica.domain.Queue;
 import com.fila.ciclica.domain.Ticket;
 import com.fila.ciclica.domain.TicketStatus;
+import com.fila.ciclica.observability.TicketTransitionLogger;
 import com.fila.ciclica.repository.CycleRepository;
 import com.fila.ciclica.repository.QueueRepository;
 import com.fila.ciclica.repository.TicketRepository;
@@ -29,16 +30,19 @@ public class TicketService {
     private final CycleRepository cycleRepository;
     private final TicketRepository ticketRepository;
     private final CycleLifecycleService cycleLifecycleService;
+    private final TicketTransitionLogger transitionLogger;
 
     public TicketService(
             QueueRepository queueRepository,
             CycleRepository cycleRepository,
             TicketRepository ticketRepository,
-            CycleLifecycleService cycleLifecycleService) {
+            CycleLifecycleService cycleLifecycleService,
+            TicketTransitionLogger transitionLogger) {
         this.queueRepository = queueRepository;
         this.cycleRepository = cycleRepository;
         this.ticketRepository = ticketRepository;
         this.cycleLifecycleService = cycleLifecycleService;
+        this.transitionLogger = transitionLogger;
     }
 
     @Transactional
@@ -164,10 +168,18 @@ public class TicketService {
         }
 
         Instant now = Instant.now();
+        TicketStatus previousStatus = ticket.getStatus();
+        int cycleNumber = ticket.getCycle().getNumber();
         ticket.setStatus(TicketStatus.CANCELLED);
         ticket.setFinishedAt(now);
         ticket.setUpdatedAt(now);
         ticket = ticketRepository.saveAndFlush(ticket);
+        transitionLogger.log(
+                ticket.getQueue().getId(),
+                ticket.getCode(),
+                cycleNumber,
+                previousStatus,
+                TicketStatus.CANCELLED);
 
         cycleLifecycleService.closeIfEmpty(ticket.getCycle());
     }
