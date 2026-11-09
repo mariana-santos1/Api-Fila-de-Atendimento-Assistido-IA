@@ -371,7 +371,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(queue): add queue management`
-**Completed**: 2026-11-08 - 91181af
+**Completed**: 2026-11-08 - 3c8a548
 
 ---
 
@@ -420,7 +420,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ticket): add ticket creation`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - 14e0a83
 
 ---
 
@@ -443,7 +443,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ticket): add priority change and cancellation`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - 16d9342
 
 ---
 
@@ -465,7 +465,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ticket): add ticket listing and detail`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - e4a0891
 
 ---
 
@@ -714,7 +714,7 @@ The feature's live state, written as it happens - a compaction gives no warning.
 
 **Dispatched:** Batch 1 (T1-T5) - 2026-11-08 - sent to a general worker; returned 2026-11-08.
 Batch 2 (T6-T11) - 2026-11-08 - sent to a general worker; returned 2026-11-08 (T6-T11 done, C1-C10 green).
-Batch 3 (T12-T16) - 2026-11-08 - sent to a general worker.
+Batch 3 (T12-T16) - 2026-11-08 - sent to a general worker; subagent hit the free usage limit after T13. T14-T16 implemented directly and verified 2026-11-09 (C11-C24 green).
 
 **Walked:** none - the API has no screen; the independent tests are executed during Execute.
 
