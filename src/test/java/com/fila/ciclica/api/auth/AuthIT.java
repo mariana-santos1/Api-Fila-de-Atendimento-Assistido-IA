@@ -10,6 +10,7 @@ import com.fila.ciclica.domain.User;
 import com.fila.ciclica.repository.UserRepository;
 import com.fila.ciclica.support.AbstractIntegrationTest;
 import com.fila.ciclica.support.ProofReporter;
+import com.jayway.jsonpath.JsonPath;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 @ExtendWith(ProofReporter.class)
@@ -34,6 +37,9 @@ class AuthIT extends AbstractIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtDecoder jwtDecoder;
 
     @BeforeEach
     void setUp() {
@@ -53,7 +59,7 @@ class AuthIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("C1 valid login returns JWT")
     void validLoginReturnsJwt() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/login")
+        String body = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email":"%s","password":"%s"}
@@ -61,7 +67,17 @@ class AuthIT extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.role").value("ADMIN"))
-                .andExpect(jsonPath("$.expiresIn").value(3600));
+                .andExpect(jsonPath("$.expiresIn").value(3600))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String token = JsonPath.read(body, "$.accessToken");
+        Jwt jwt = jwtDecoder.decode(token);
+        assertThat(jwt.getSubject()).isEqualTo(EMAIL);
+        assertThat(jwt.getClaimAsString("role")).isEqualTo("ADMIN");
+        assertThat(jwt.getIssuedAt()).isNotNull();
+        assertThat(jwt.getExpiresAt()).isAfter(Instant.now());
     }
 
     @Test
@@ -72,6 +88,15 @@ class AuthIT extends AbstractIntegrationTest {
                         .content("""
                                 {"email":"%s","password":"wrong-password"}
                                 """.formatted(EMAIL)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.detail").value("Invalid email or password"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"unknown-%s@test.local","password":"%s"}
+                                """.formatted(java.util.UUID.randomUUID(), PASSWORD)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
                 .andExpect(jsonPath("$.detail").value("Invalid email or password"));

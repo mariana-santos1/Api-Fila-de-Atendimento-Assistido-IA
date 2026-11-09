@@ -21,12 +21,20 @@ import com.fila.ciclica.support.AbstractIntegrationTest;
 import com.fila.ciclica.support.ProofReporter;
 import com.jayway.jsonpath.JsonPath;
 import java.util.UUID;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @ExtendWith(ProofReporter.class)
 class TicketIT extends AbstractIntegrationTest {
@@ -223,6 +231,18 @@ class TicketIT extends AbstractIntegrationTest {
         Ticket reloaded = ticketRepository.findByPublicId(publicId).orElseThrow();
         assertThat(reloaded.getPriority()).isEqualTo(Priority.PREFERENTIAL);
         assertThat(reloaded.getCycleWeight()).isEqualTo(2);
+
+        reloaded.setStatus(TicketStatus.WAITING);
+        ticketRepository.saveAndFlush(reloaded);
+
+        mockMvc.perform(patch("/api/v1/tickets/{publicId}/priority", publicId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"priority":"URGENT"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PRIORITY_LOCKED"));
     }
 
     @Test
@@ -279,6 +299,29 @@ class TicketIT extends AbstractIntegrationTest {
         assertThat(closed.getStatus()).isEqualTo(CycleStatus.CLOSED);
         assertThat(closed.getActiveQueueId()).isNull();
         assertThat(closed.getClosedAt()).isNotNull();
+
+        long calledQueueId = createQueue(token, uniqueName("cancel-called"), uniquePrefix(), 1, 2, 3);
+        String calledBody = mockMvc.perform(post("/api/v1/queues/{queueId}/tickets", calledQueueId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ticketRequest("Called Cancel", "NORMAL", null)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String calledPublicId = JsonPath.read(calledBody, "$.publicId");
+
+        mockMvc.perform(post("/api/v1/queues/{queueId}/calls/next", calledQueueId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/v1/tickets/{publicId}", calledPublicId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        Ticket cancelledCalled = ticketRepository.findByPublicId(calledPublicId).orElseThrow();
+        assertThat(cancelledCalled.getStatus()).isEqualTo(TicketStatus.CANCELLED);
+        assertThat(cancelledCalled.getFinishedAt()).isNotNull();
     }
 
     @Test
@@ -376,6 +419,49 @@ class TicketIT extends AbstractIntegrationTest {
         ticket.setCreatedAt(now);
         ticket.setUpdatedAt(now);
         return ticket;
+    }
+
+    @Test
+    @DisplayName("concurrent external reference creates one ticket")
+    void concurrentExternalReferenceCreatesOneTicket() throws Exception {
+        String token = adminToken();
+        long queueId = createQueue(token, uniqueName("concurrent-ref"), uniquePrefix(), 1, 2, 3);
+        String reference = "concurrent-ref-" + UUID.randomUUID();
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        Callable<MvcResult> request = () -> {
+            start.await(10, TimeUnit.SECONDS);
+            return mockMvc.perform(post("/api/v1/queues/{queueId}/tickets", queueId)
+                            .header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(ticketRequest("Concurrent User", "NORMAL", reference)))
+                    .andReturn();
+        };
+
+        try {
+            Future<MvcResult> first = pool.submit(request);
+            Future<MvcResult> second = pool.submit(request);
+            start.countDown();
+
+            MvcResult firstResult = first.get(60, TimeUnit.SECONDS);
+            MvcResult secondResult = second.get(60, TimeUnit.SECONDS);
+
+            assertThat(List.of(
+                            firstResult.getResponse().getStatus(),
+                            secondResult.getResponse().getStatus()))
+                    .containsExactlyInAnyOrder(200, 201);
+
+            String firstPublicId = JsonPath.read(
+                    firstResult.getResponse().getContentAsString(), "$.publicId");
+            String secondPublicId = JsonPath.read(
+                    secondResult.getResponse().getContentAsString(), "$.publicId");
+            assertThat(firstPublicId).isEqualTo(secondPublicId);
+            assertThat(ticketRepository.findByQueueIdAndExternalReference(queueId, reference))
+                    .isPresent();
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     private long createQueue(

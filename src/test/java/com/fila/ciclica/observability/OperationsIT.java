@@ -88,6 +88,7 @@ class OperationsIT extends AbstractIntegrationTest {
         assertThat(logText).contains("from=CALLED").contains("to=COMPLETED");
         assertThat(logText).doesNotContain(customerName);
         assertThat(messages).isNotEmpty();
+        assertThat(appender.list).allMatch(event -> event.getLevel() == Level.INFO);
     }
 
     private String createTicket(String token, long queueId, String customerName, String priority)

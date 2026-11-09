@@ -106,6 +106,14 @@ class QueueIT extends AbstractIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fields.weightUrgent").exists());
+
+        mockMvc.perform(post("/api/v1/queues")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(queueRequest(uniqueName("invalid-preferential"), uniquePrefix(), 1, 3, 2)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fields.weightPreferential").exists());
     }
 
     @Test
@@ -303,6 +311,12 @@ class QueueIT extends AbstractIntegrationTest {
                 .getContentAsString();
         java.util.List<Integer> listedIds = JsonPath.read(listBody, "$.content[*].id");
         assertThat(listedIds).contains(id.intValue());
+
+        mockMvc.perform(get("/api/v1/queues")
+                        .header("Authorization", "Bearer " + token)
+                        .param("size", "101"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_PAGE_SIZE"));
 
         mockMvc.perform(get("/api/v1/queues/{id}", 999999)
                         .header("Authorization", "Bearer " + token))

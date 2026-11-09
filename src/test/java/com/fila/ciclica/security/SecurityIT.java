@@ -8,8 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fila.ciclica.support.AbstractIntegrationTest;
 import com.fila.ciclica.support.ProofReporter;
 import com.jayway.jsonpath.JsonPath;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +23,7 @@ import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 @ExtendWith(ProofReporter.class)
@@ -52,6 +56,26 @@ class SecurityIT extends AbstractIntegrationTest {
 
         mockMvc.perform(get("/api/v1/users")
                         .header("Authorization", "Bearer " + expiredToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        SecretKeySpec foreignKey = new SecretKeySpec(
+                "foreign-jwt-secret-0123456789abcdef".getBytes(StandardCharsets.UTF_8),
+                "HmacSHA256");
+        JwtEncoder foreignEncoder = new NimbusJwtEncoder(new ImmutableSecret<>(foreignKey));
+        Instant now = Instant.now();
+        JwtClaimsSet forgedClaims = JwtClaimsSet.builder()
+                .subject("forged@test.local")
+                .claim("role", "ADMIN")
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(3600))
+                .build();
+        String forgedToken = foreignEncoder
+                .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), forgedClaims))
+                .getTokenValue();
+
+        mockMvc.perform(get("/api/v1/users")
+                        .header("Authorization", "Bearer " + forgedToken))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
