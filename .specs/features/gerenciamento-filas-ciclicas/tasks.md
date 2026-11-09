@@ -489,7 +489,7 @@ T20 → T21
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(domain): add cycle scheduler`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - 9e7b21e
 
 ---
 
@@ -512,7 +512,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(call): add call next endpoint`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - c154b40
 
 ---
 
@@ -536,7 +536,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(call): add attendance outcomes and cycle rollover`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - ef4a126
 
 ---
 
@@ -559,7 +559,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `test(e2e): add full cycle and concurrency suites`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - b4244f4
 
 ---
 
@@ -582,7 +582,7 @@ T20 → T21
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ops): add health, transition logs and README`
-**Completed**: 2026-11-09 - pending
+**Completed**: 2026-11-09 - 862611c
 
 ---
 
@@ -720,6 +720,7 @@ The feature's live state, written as it happens - a compaction gives no warning.
 **Dispatched:** Batch 1 (T1-T5) - 2026-11-08 - sent to a general worker; returned 2026-11-08.
 Batch 2 (T6-T11) - 2026-11-08 - sent to a general worker; returned 2026-11-08 (T6-T11 done, C1-C10 green).
 Batch 3 (T12-T16) - 2026-11-08 - sent to a general worker; subagent hit the free usage limit after T13. T14-T16 implemented directly and verified 2026-11-09 (C11-C24 green).
+Batch 4 (T17-T21) - 2026-11-09 - implemented by a subagent; full `mvn -q verify` green, C1-C37 plus E2E proofs (52 tests).
 
 **Walked:** none - the API has no screen; the independent tests are executed during Execute.
 
