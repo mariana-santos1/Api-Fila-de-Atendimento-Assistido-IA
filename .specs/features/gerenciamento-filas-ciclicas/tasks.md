@@ -552,13 +552,14 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `CyclicQueueE2EIT` percorre fila, tickets, chamadas, ausências, fechamento e reabertura.
-- [ ] `CallNextConcurrencyIT` dispara duas chamadas simultâneas e obtém exatamente um 200 e um 409.
-- [ ] Test count: todos os testes de E2E e concorrência passam; nenhum teste removido.
+- [x] `CyclicQueueE2EIT` percorre fila, tickets, chamadas, ausências, fechamento e reabertura.
+- [x] `CallNextConcurrencyIT` dispara duas chamadas simultâneas e obtém exatamente um 200 e um 409.
+- [x] Test count: todos os testes de E2E e concorrência passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `test(e2e): add full cycle and concurrency suites`
+**Completed**: 2026-11-09 - pending
 
 ---
 
