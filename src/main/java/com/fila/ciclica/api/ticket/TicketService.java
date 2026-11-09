@@ -2,6 +2,7 @@ package com.fila.ciclica.api.ticket;
 
 import com.fila.ciclica.common.ApiException;
 import com.fila.ciclica.domain.Cycle;
+import com.fila.ciclica.domain.CycleLifecycleService;
 import com.fila.ciclica.domain.Priority;
 import com.fila.ciclica.domain.Queue;
 import com.fila.ciclica.domain.Ticket;
@@ -23,14 +24,17 @@ public class TicketService {
     private final QueueRepository queueRepository;
     private final CycleRepository cycleRepository;
     private final TicketRepository ticketRepository;
+    private final CycleLifecycleService cycleLifecycleService;
 
     public TicketService(
             QueueRepository queueRepository,
             CycleRepository cycleRepository,
-            TicketRepository ticketRepository) {
+            TicketRepository ticketRepository,
+            CycleLifecycleService cycleLifecycleService) {
         this.queueRepository = queueRepository;
         this.cycleRepository = cycleRepository;
         this.ticketRepository = ticketRepository;
+        this.cycleLifecycleService = cycleLifecycleService;
     }
 
     @Transactional
@@ -86,6 +90,48 @@ public class TicketService {
         return new TicketCreationResult(TicketResponse.from(ticket), true);
     }
 
+    @Transactional
+    public TicketResponse changePriority(String publicId, PriorityChangeRequest request) {
+        Ticket ticket = ticketRepository.findByPublicId(publicId)
+                .orElseThrow(this::ticketNotFound);
+
+        if (ticket.getStatus() != TicketStatus.WAITING || ticket.getCallsInCycle() > 0) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "PRIORITY_LOCKED",
+                    "Priority can only change while the ticket is waiting and was never called");
+        }
+
+        Priority priority = parsePriority(request.priority(), false);
+        ticket.setPriority(priority);
+        ticket.setCycleWeight(ticket.getQueue().weightFor(priority));
+        ticket.setUpdatedAt(Instant.now());
+
+        return TicketResponse.from(ticketRepository.saveAndFlush(ticket));
+    }
+
+    @Transactional
+    public void cancel(String publicId) {
+        Ticket ticket = ticketRepository.findByPublicId(publicId)
+                .orElseThrow(this::ticketNotFound);
+
+        if (ticket.getStatus() != TicketStatus.WAITING
+                && ticket.getStatus() != TicketStatus.CALLED) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "INVALID_STATE",
+                    "Only waiting or called tickets can be cancelled");
+        }
+
+        Instant now = Instant.now();
+        ticket.setStatus(TicketStatus.CANCELLED);
+        ticket.setFinishedAt(now);
+        ticket.setUpdatedAt(now);
+        ticket = ticketRepository.saveAndFlush(ticket);
+
+        cycleLifecycleService.closeIfEmpty(ticket.getCycle());
+    }
+
     Priority parsePriority(String raw, boolean defaultNormal) {
         if (raw == null || raw.isBlank()) {
             if (defaultNormal) {
@@ -110,6 +156,10 @@ public class TicketService {
 
     ApiException queueNotFound() {
         return new ApiException(HttpStatus.NOT_FOUND, "QUEUE_NOT_FOUND", "Queue not found");
+    }
+
+    ApiException ticketNotFound() {
+        return new ApiException(HttpStatus.NOT_FOUND, "TICKET_NOT_FOUND", "Ticket not found");
     }
 
     ApiException invalidPriority() {

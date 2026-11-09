@@ -434,15 +434,16 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Prioridade só muda em WAITING com `callsInCycle=0`; caso contrário 409 `PRIORITY_LOCKED`.
-- [ ] A mudança recalcula `cycleWeight` do ticket.
-- [ ] Cancelamento de WAITING/CALLED vira CANCELLED e avalia fechamento do ciclo.
-- [ ] `TicketIT` cobre prioridade bloqueada e cancelamento.
-- [ ] Test count: todos os testes de `TicketIT` passam; nenhum teste removido.
+- [x] Prioridade só muda em WAITING com `callsInCycle=0`; caso contrário 409 `PRIORITY_LOCKED`.
+- [x] A mudança recalcula `cycleWeight` do ticket.
+- [x] Cancelamento de WAITING/CALLED vira CANCELLED e avalia fechamento do ciclo.
+- [x] `TicketIT` cobre prioridade bloqueada e cancelamento.
+- [x] Test count: todos os testes de `TicketIT` passam; nenhum teste removido.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(ticket): add priority change and cancellation`
+**Completed**: 2026-11-09 - pending
 
 ---
 

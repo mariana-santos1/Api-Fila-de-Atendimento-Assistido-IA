@@ -2,13 +2,17 @@ package com.fila.ciclica.api.ticket;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fila.ciclica.domain.Priority;
+import com.fila.ciclica.domain.Cycle;
+import com.fila.ciclica.domain.CycleStatus;
 import com.fila.ciclica.domain.Ticket;
 import com.fila.ciclica.domain.TicketStatus;
+import com.fila.ciclica.repository.CycleRepository;
 import com.fila.ciclica.repository.TicketRepository;
 import com.fila.ciclica.support.AbstractIntegrationTest;
 import com.fila.ciclica.support.ProofReporter;
@@ -29,6 +33,9 @@ class TicketIT extends AbstractIntegrationTest {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private CycleRepository cycleRepository;
 
     @Test
     @DisplayName("C17 ticket creation codes and snapshots weight")
@@ -165,6 +172,107 @@ class TicketIT extends AbstractIntegrationTest {
                         .content(ticketRequest("Blocked User", "NORMAL", null)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("QUEUE_INACTIVE"));
+    }
+
+    @Test
+    @DisplayName("C23 priority change is locked after call")
+    void priorityChangeIsLockedAfterCall() throws Exception {
+        String token = adminToken();
+        long queueId = createQueue(token, uniqueName("priority"), uniquePrefix(), 1, 2, 3);
+
+        String created = mockMvc.perform(post("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ticketRequest("Priority User", "NORMAL", null)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String publicId = JsonPath.read(created, "$.publicId");
+
+        mockMvc.perform(patch("/api/v1/tickets/{publicId}/priority", publicId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"priority":"PREFERENTIAL"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.priority").value("PREFERENTIAL"))
+                .andExpect(jsonPath("$.cycleWeight").value(2));
+
+        Ticket called = ticketRepository.findByPublicId(publicId).orElseThrow();
+        called.setStatus(TicketStatus.CALLED);
+        called.setCallsInCycle(1);
+        ticketRepository.saveAndFlush(called);
+
+        mockMvc.perform(patch("/api/v1/tickets/{publicId}/priority", publicId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"priority":"URGENT"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PRIORITY_LOCKED"));
+
+        Ticket reloaded = ticketRepository.findByPublicId(publicId).orElseThrow();
+        assertThat(reloaded.getPriority()).isEqualTo(Priority.PREFERENTIAL);
+        assertThat(reloaded.getCycleWeight()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("C24 cancel evaluates cycle closure")
+    void cancelEvaluatesCycleClosure() throws Exception {
+        String token = adminToken();
+        long queueId = createQueue(token, uniqueName("cancel"), uniquePrefix(), 1, 2, 3);
+
+        String first = mockMvc.perform(post("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ticketRequest("Cancel Me", "NORMAL", null)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String publicId = JsonPath.read(first, "$.publicId");
+
+        String second = mockMvc.perform(post("/api/v1/queues/{queueId}/tickets", queueId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ticketRequest("Already Done", "NORMAL", null)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String completedPublicId = JsonPath.read(second, "$.publicId");
+
+        Ticket completed = ticketRepository.findByPublicId(completedPublicId).orElseThrow();
+        completed.setStatus(TicketStatus.COMPLETED);
+        completed.setFinishedAt(java.time.Instant.now());
+        ticketRepository.saveAndFlush(completed);
+
+        mockMvc.perform(delete("/api/v1/tickets/{publicId}", completedPublicId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_STATE"));
+
+        Ticket ticket = ticketRepository.findByPublicId(publicId).orElseThrow();
+        Long cycleId = ticket.getCycle().getId();
+
+        Cycle active = cycleRepository.findById(cycleId).orElseThrow();
+        assertThat(active.getStatus()).isEqualTo(CycleStatus.ACTIVE);
+
+        mockMvc.perform(delete("/api/v1/tickets/{publicId}", publicId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        Ticket cancelled = ticketRepository.findByPublicId(publicId).orElseThrow();
+        assertThat(cancelled.getStatus()).isEqualTo(TicketStatus.CANCELLED);
+        assertThat(cancelled.getFinishedAt()).isNotNull();
+
+        Cycle closed = cycleRepository.findById(cycleId).orElseThrow();
+        assertThat(closed.getStatus()).isEqualTo(CycleStatus.CLOSED);
+        assertThat(closed.getActiveQueueId()).isNull();
+        assertThat(closed.getClosedAt()).isNotNull();
     }
 
     private long createQueue(
